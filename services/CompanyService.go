@@ -59,7 +59,7 @@ func SaveCompany(email, token, name string) error {
 		return fmt.Errorf("ошибка создания схемы для компании %s: %w", company.Name, err)
 	}
 
-	log.Printf("Компания %s успешно сохранена, и схема создана.", company.Name, company.SchemaName)
+	log.Printf("Компания %s успешно сохранена, и схема создана.", company.SchemaName)
 
 	// Асинхронный запуск загрузки данных
 	go func() {

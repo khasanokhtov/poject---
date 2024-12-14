@@ -8,10 +8,11 @@ import (
 	"net/http"
 )
 
-const ( 
-	ExternalAuthURL = "https://operations.cropwise.com/api/v3/sign_in"
-	ExternalCompanyInfoURL = "https://operations.cropwise.com/api/v3/company"
+const (
+	ExternalAuthURL         = "https://operations.cropwise.com/api/v3/sign_in"
+	ExternalCompanyInfoURL  = "https://operations.cropwise.com/api/v3/company"
 )
+
 type ExternalAuthRequest struct {
 	UserLogin struct {
 		Email    string `json:"email"`
@@ -23,6 +24,7 @@ type ExternalAuthResponse struct {
 	Success      bool   `json:"success"`
 	UserApiToken string `json:"user_api_token"`
 	Company      string `json:"company"`
+	CompanyID	 uint	`json:"-"`
 }
 
 type ExternalCompanyInfoToCheck struct {
@@ -31,50 +33,50 @@ type ExternalCompanyInfoToCheck struct {
 }
 
 type ExternalCompanyAuthResponse struct {
-	Data ExternalCompanyInfo `json:"data"`
+	Data ExternalCompanyInfoToCheck `json:"data"`
 }
 
 func AuthenticateUser(email, password string, localCompanyID uint) (*ExternalAuthResponse, error) {
-	//1.Аутентификация пользователя и получение токена
+	// 1. Аутентификация пользователя и получение токена
 	authResponse, err := authenticate(email, password)
 	if err != nil {
-		return nil,  fmt.Errorf("ошибка аутентификации: %w", err)
+		return nil, fmt.Errorf("ошибка аутентификации: %w", err)
 	}
 
-	//2. Получение информации о компании
+	// 2. Получение информации о компании
 	companyID, err := fetchCompanyID(authResponse.UserApiToken)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения ID компании: %w", err)
 	}
-	
-	if companyID != localCompanyID  {
-		return nil, errors.New("пользователь не связан ни с одной компанией")
-	}
 
+	
+	authResponse.CompanyID = companyID
 	return authResponse, nil
 }
 
-
-func authenticate(email, password string)(*ExternalAuthResponse, error){
-	//Запрос формируем
+func authenticate(email, password string) (*ExternalAuthResponse, error) {
+	// Формируем запрос
 	authRequest := ExternalAuthRequest{}
 	authRequest.UserLogin.Email = email
 	authRequest.UserLogin.Password = password
 
-	
 	jsonData, err := json.Marshal(authRequest)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка маршалинга запроса: %w", err)
 	}
 
-	//Отправляем запрос
+	// Отправляем запрос
 	resp, err := http.Post(ExternalAuthURL, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("ошибка выполнения запроса: %w", err)
 	}
 	defer resp.Body.Close()
 
-	//Ответ
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New("внешняя аутентификация не удалась")
+	}
+
+	// Обрабатываем ответ
 	var authResponse ExternalAuthResponse
 	if err := json.NewDecoder(resp.Body).Decode(&authResponse); err != nil {
 		return nil, fmt.Errorf("ошибка декодирования ответа: %w", err)
@@ -83,14 +85,13 @@ func authenticate(email, password string)(*ExternalAuthResponse, error){
 	if !authResponse.Success {
 		return nil, errors.New("аутентификация не удалась")
 	}
-	return &authResponse, nil
 
+	return &authResponse, nil
 }
 
-
-func fetchCompanyID(userApiToken string)(uint, error){
+func fetchCompanyID(userApiToken string) (uint, error) {
 	req, err := http.NewRequest("GET", ExternalCompanyInfoURL, nil)
-	if err != nil{
+	if err != nil {
 		return 0, fmt.Errorf("ошибка создания запроса: %w", err)
 	}
 
@@ -103,16 +104,14 @@ func fetchCompanyID(userApiToken string)(uint, error){
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK{
+	if resp.StatusCode != http.StatusOK {
 		return 0, errors.New("не удалось получить информацию о компании")
 	}
 
-	var companyResponse ExternalCompanyAuthResponse 
-	if err := json.NewDecoder(resp.Body).Decode(&companyResponse); err != nil{
+	var companyResponse ExternalCompanyAuthResponse
+	if err := json.NewDecoder(resp.Body).Decode(&companyResponse); err != nil {
 		return 0, fmt.Errorf("ошибка декодирования ответа: %w", err)
-		
 	}
 
 	return companyResponse.Data.ID, nil
-
 }
