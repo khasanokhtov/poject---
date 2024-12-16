@@ -193,7 +193,10 @@ func MigrateExistingSchemas() error {
 			// &models.PersonalIdentifier{},
 			// &models.ProductionCycle{},
 			// &models.ProductivityEstimate{},
-			&models.ProductivityEstimateHistory{},
+			// &models.ProductivityEstimateHistory{},
+			// &models.Users{},
+			//&models.WorkType{},
+			&models.WorkTypeGroup{},
 			); err != nil {
             log.Printf("Ошибка миграции для схемы %s: %v", schemaName, err)
             return err
@@ -300,7 +303,10 @@ func CreateSchema(companyName string) error {
 		// {&models.PersonalIdentifier{}, "personal_identifiers"},
 		// {&models.ProductionCycle{}, "production_cycle"},
 		// {&models.ProductivityEstimate{}, "productivity_estimate"},
-		{&models.ProductivityEstimateHistory{}, "estimate_history"},
+		// {&models.ProductivityEstimateHistory{}, "estimate_history"},
+		// {&models.Users{}, "users"},
+		// {&models.WorkType{}, "work_type"},
+		{&models.WorkTypeGroup{}, "work_type_group"},
 	}
 
 	for _, table := range tables {

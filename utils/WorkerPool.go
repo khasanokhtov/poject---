@@ -267,8 +267,20 @@ func FetchDataForCompany(company models.Company) error{
 		// 	log.Printf("Ошибка загрузки productivity_estimate для компании %s: %v", company.Name, err)
 		// 	continue
 		// }
-		if err := tasks.FetchAndSaveProductivityEstimateHistories(company.Token, company.SchemaName); err != nil {
-			log.Printf("Ошибка загрузки productivity_estimate_history для компании %s: %v", company.Name, err)
+		// if err := tasks.FetchAndSaveProductivityEstimateHistories(company.Token, company.SchemaName); err != nil {
+		// 	log.Printf("Ошибка загрузки productivity_estimate_history для компании %s: %v", company.Name, err)
+		// 	continue
+		// }
+		// if err := tasks.FetchAndSaveUsers(company.Token, company.SchemaName); err != nil {
+		// 	log.Printf("Ошибка загрузки users для компании %s: %v", company.Name, err)
+		// 	continue
+		// }
+		// if err := tasks.FetchAndSaveWorkTypes(company.Token, company.SchemaName); err != nil {
+		// 	log.Printf("Ошибка загрузки work_type для компании %s: %v", company.Name, err)
+		// 	continue
+		// }
+		if err := tasks.FetchAndSaveWorkTypeGroups(company.Token, company.SchemaName); err != nil {
+			log.Printf("Ошибка загрузки work_type_groups для компании %s: %v", company.Name, err)
 			continue
 		}
 	}
