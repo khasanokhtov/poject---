@@ -7,6 +7,7 @@ import (
 	"integration-cropwise-v1/utils"
 	"log"
 	"os"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -39,7 +40,14 @@ func main() {
 	
 	
 	//Запуск worker-пула
-	utils.FetchingData()
+	go func() {
+		for {
+			log.Println("Начало ежедневного обновления данных.")
+			utils.FetchingData()
+			log.Println("Ежедневное обновление данных завершено.")
+			time.Sleep(24 * time.Hour) // Задержка на 24 часа
+		}
+	}()
 	log.Println("Все компании успешно обработаны.")
 	
 }
