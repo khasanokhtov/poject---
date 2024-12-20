@@ -4,31 +4,34 @@ import (
 	"time"
 )
 
-type HarvestWeighingModel struct {
-	ID                      uint       `json:"id" gorm:"primaryKey"`
-	MachineID               uint       `json:"machine_id"`
-	FieldID                 *uint      `json:"field_id"`
-	WeighingPlaceID         uint       `json:"weighing_place_id"`
-	TypeOfRoute             *string    `json:"type_of_route"`
-	DepartureFromFieldTime  time.Time  `json:"departure_from_field_time"`
-	Weight                  float64    `json:"weight"`
-	BruttoWeight            float64    `json:"brutto_weight"`
-	MarketableWeight        *float64   `json:"marketable_weight"`
-	SeedMoisture            *float64   `json:"seed_moisture"`
-	SeedAdmixture           *float64   `json:"seed_admixture"`
-	WeighingTime            time.Time  `json:"weighing_time"`
-	LastTruck               bool       `json:"last_truck"`
-	TrackLength             *float64   `json:"track_length"`
-	ManuallySetTrackLength  bool       `json:"manually_set_track_length"`
-	AdditionalInfo          *string    `json:"additional_info"`
-	Description             *string    `json:"description"`
-	Season                  uint       `json:"season"`
-	CreatedByUserID         uint       `json:"created_by_user_id"`
-	ExternalID              *string    `json:"external_id"`
-	CreatedAt               time.Time  `json:"created_at"`
-	UpdatedAt               time.Time  `json:"updated_at"`
-	WaybillNumber           *string    `json:"waybill_number"`
-	WaybillDate             *time.Time `json:"waybill_date"`
-	HistoryItemID           *uint      `json:"history_item_id"`
-	UnloadedMachines        []string   `json:"unloaded_machines" gorm:"-"`
+type HarvestWeighing struct {
+	ID                      int64      `gorm:"primaryKey;column:id"`
+	MachineID               *int64     `gorm:"column:machine_id"`
+	FieldID                 *int64     `gorm:"column:field_id"`
+	WeighingPlaceID         *int64     `gorm:"column:weighing_place_id"`
+	Season                  *int64     `gorm:"column:season"`
+	DepartureFromFieldTime  *time.Time `gorm:"column:departure_from_field_time"`
+	Weight                  *float64   `gorm:"column:weight"`
+	BruttoWeigh             *float64   `gorm:"column:brutto_weigh"`
+	SeedMoisture            *float64   `gorm:"column:seed_moisture"`
+	SeedAdmixture           *float64   `gorm:"column:seed_admixture"`
+	WeighingTime            *time.Time `gorm:"column:weighing_time"`
+	LastTruck               *bool      `gorm:"column:last_truck"`
+	TrackLength             *float64   `gorm:"column:track_length"`
+	ManuallySetTrackLength  *bool      `gorm:"column:manually_set_track_length"`
+	AdditionalInfo          *string    `gorm:"column:additional_info;type:text"`
+	Description             *string    `gorm:"column:description;type:text"`
+	ExternalID              *string    `gorm:"column:external_id;size:255"`
+	WaybillNumber           *string    `gorm:"column:waybill_number;size:255"`
+	WaybillDate             *time.Time `gorm:"column:waybill_date"`
+	CreatedByUserID         *int64     `gorm:"column:created_by_user_id"`
+	UnloadedMachines        *string    `gorm:"column:unloaded_machines;type:jsonb"`
+	HistoryItemID           *int64     `gorm:"column:history_item_id"`
+	MarketableWeight        *float64   `gorm:"column:marketable_weight"`
+	CreatedAt               *time.Time `gorm:"column:created_at"`
+	UpdatedAt               *time.Time `gorm:"column:updated_at"`
+}
+
+func (HarvestWeighing) TableName() string {
+	return "harvest_weighings"
 }

@@ -4,11 +4,15 @@ import (
 	"time"
 )
 
-type GroupFolderModel struct {
-	ID         uint      `json:"id" gorm:"primaryKey"`
-	ParentID   *uint     `json:"parent_id"` // Может быть null
-	Name       string    `json:"name" gorm:"not null"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
-	ExternalID *string   `json:"external_id"` // Может быть null
+type GroupFolder struct {
+	ID         int64      `gorm:"primaryKey;column:id"`
+	ParentID   *int64     `gorm:"column:parent_id"`
+	Name       *string    `gorm:"column:name;size:255"`
+	ExternalID *string    `gorm:"column:external_id;size:255"`
+	CreatedAt  *time.Time `gorm:"column:created_at"`
+	UpdatedAt  *time.Time `gorm:"column:updated_at"`
+}
+
+func (GroupFolder) TableName() string {
+	return "group_folders"
 }

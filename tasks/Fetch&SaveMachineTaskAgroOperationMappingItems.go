@@ -11,23 +11,11 @@ import (
 	"strconv"
 )
 
-const MachineTaskAgroOperationMappingItemsAPIURL = "https://operations.cropwise.com/api/v3/machine_task_agro_operation_mapping_items"
+const MachineTaskAgroOperationMappingItemsEndpoint = "https://operations.cropwise.com/api/v3/machine_task_agro_operation_mapping_items"
 
-type MachineTaskAgroOperationMappingItemsResponse struct {
-	Data []models.MachineTaskAgroOperationMappingItemModel `json:"data"`
-	Meta struct {
-		Response struct {
-			ObtainedRecords int `json:"obtained_records"`
-			LastRecordID    int `json:"last_record_id"`
-		} `json:"response"`
-	} `json:"meta"`
-}
+func FetchAndSaveMachineTaskAgroOperationMappingItems(token, schemaName string) error {
+	log.Printf("Начинаем загрузку данных для схемы: %s", schemaName)
 
-// FetchAndSaveMachineTaskAgroOperationMappingItems - функция для загрузки и сохранения данных связи задач машин и агроопераций
-func FetchAndSaveMachineTaskAgroOperationMappingItems(token string, schemaName string) error {
-	log.Printf("Начинаем загрузку MachineTaskAgroOperationMappingItems для схемы: %s", schemaName)
-
-	// Устанавливаем search_path для схемы компании
 	setSearchPath := fmt.Sprintf("SET search_path TO %s", schemaName)
 	if err := database.DB.Exec(setSearchPath).Error; err != nil {
 		log.Printf("Ошибка установки search_path на %s: %v", schemaName, err)
@@ -44,7 +32,7 @@ func FetchAndSaveMachineTaskAgroOperationMappingItems(token string, schemaName s
 	fromID := 0
 
 	for {
-		url := MachineTaskAgroOperationMappingItemsAPIURL + "?from_id=" + strconv.Itoa(fromID)
+		url := MachineTaskAgroOperationMappingItemsEndpoint + "?from_id=" + strconv.Itoa(fromID)
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
 			return fmt.Errorf("ошибка создания запроса: %w", err)
@@ -66,24 +54,31 @@ func FetchAndSaveMachineTaskAgroOperationMappingItems(token string, schemaName s
 			return fmt.Errorf("ошибка чтения ответа: %w", err)
 		}
 
-		var mappingItemsResponse MachineTaskAgroOperationMappingItemsResponse
-		if err := json.Unmarshal(body, &mappingItemsResponse); err != nil {
+		var response struct {
+			Data []models.MachineTaskAgroOperationMappingItem `json:"data"`
+			Meta struct {
+				Response struct {
+					ObtainedRecords int `json:"obtained_records"`
+					LastRecordID    int `json:"last_record_id"`
+				} `json:"response"`
+			} `json:"meta"`
+		}
+
+		if err := json.Unmarshal(body, &response); err != nil {
 			return fmt.Errorf("ошибка парсинга JSON: %w", err)
 		}
 
-		// Сохраняем данные в базу
-		for _, mappingItem := range mappingItemsResponse.Data {
-			if err := database.DB.Save(&mappingItem).Error; err != nil {
-				return fmt.Errorf("ошибка сохранения связи задачи машины и агрооперации с ID %d: %w", mappingItem.ID, err)
+		for _, item := range response.Data {
+			if err := database.DB.Save(&item).Error; err != nil {
+				return fmt.Errorf("ошибка сохранения элемента с ID %d: %w", item.ID, err)
 			}
 		}
 
-		// Проверяем, нужно ли продолжать загрузку данных
-		if mappingItemsResponse.Meta.Response.ObtainedRecords == 0 {
+		if response.Meta.Response.ObtainedRecords == 0 {
 			break
 		}
 
-		fromID = mappingItemsResponse.Meta.Response.LastRecordID + 1
+		fromID = response.Meta.Response.LastRecordID + 1
 	}
 
 	return nil

@@ -7,41 +7,18 @@ import (
 	"time"
 )
 
-// AvatarForUsers - структура для вложенного объекта avatar
-type AvatarForUsers struct {
+type Avatar struct {
 	URL          string  `json:"url"`
-	AvatarLarge  *Image  `json:"avatar_large"` // Может быть null
-	AvatarMid    *Image  `json:"avatar_mid"`   // Может быть null
-	AvatarSmall  *Image  `json:"avatar_small"` // Может быть null
-	AvatarTiny   *Image  `json:"avatar_tiny"`  // Может быть null
+	AvatarLarge  *Image  `json:"avatar_large"`
+	AvatarMid    *Image  `json:"avatar_mid"`
+	AvatarSmall  *Image  `json:"avatar_small"`
+	AvatarTiny   *Image  `json:"avatar_tiny"`
 }
 
-// Image - структура для вложенного объекта изображений
 type Image struct {
 	URL string `json:"url"`
 }
 
-// Реализуем интерфейсы driver.Valuer и sql.Scanner для AvatarForUsers
-func (a AvatarForUsers) Value() (driver.Value, error) {
-	if (a == AvatarForUsers{}) {
-		return nil, nil
-	}
-	return json.Marshal(a)
-}
-
-func (a *AvatarForUsers) Scan(value interface{}) error {
-	if value == nil {
-		*a = AvatarForUsers{}
-		return nil
-	}
-	bytes, ok := value.([]byte)
-	if !ok {
-		return fmt.Errorf("не удалось преобразовать %T в AvatarForUsers", value)
-	}
-	return json.Unmarshal(bytes, a)
-}
-
-// UnitsTable - структура для вложенного объекта units_table
 type UnitsTable struct {
 	Area                   string `json:"area"`
 	Depth                  string `json:"depth"`
@@ -75,33 +52,52 @@ type UnitsTable struct {
 	FuelConsumptionPerTime string `json:"fuel_consumption_per_time"`
 }
 
-// Users - модель для таблицы users
-type Users struct {
-	ID                           int             `json:"id" gorm:"primaryKey"`
-	Username                     string          `json:"username"`
-	Email                        string          `json:"email"`
-	NotificationEmail            *string         `json:"notification_email"`       // Может быть null
-	MobilePhone                  string          `json:"mobile_phone"`
-	Avatar                       *AvatarForUsers `json:"avatar" gorm:"type:jsonb"` // Сохраняем как JSON
-	Position                     *string         `json:"position"`                 // Может быть null
-	Language                     string          `json:"language"`
-	TimeZone                     string          `json:"time_zone"`
-	YieldUnits                   string          `json:"yield_units"`
-	Status                       string          `json:"status"`
-	Dispatcher                   bool            `json:"dispatcher"`
-	Driver                       bool            `json:"driver"`
-	AdditionalInfo               *string         `json:"additional_info"`          // Может быть null
-	Description                  *string         `json:"description"`              // Может быть null
-	UnitsTable                   UnitsTable      `json:"units_table" gorm:"embedded;embeddedPrefix:units_table_"`
-	RFID                         string          `json:"rfid"`
-	LastSignInAt                 *time.Time      `json:"last_sign_in_at"`          // Может быть null
-	CurrentSignInAt              *time.Time      `json:"current_sign_in_at"`       // Может быть null
-	ConsultingCompanyID          *int            `json:"consulting_company_id"`    // Может быть null
-	CreatedAt                    time.Time       `json:"created_at"`
-	UpdatedAt                    time.Time       `json:"updated_at"`
-	ExternalID                   *string         `json:"external_id"`              // Может быть null
-	AuthMethod                   string          `json:"auth_method"`
-	CreateScoutReportOutsideOfField bool         `json:"create_scout_report_outside_of_field"`
-	Supervisor                   bool            `json:"supervisor"`
-	Worker                       bool            `json:"worker"`
+type User struct {
+	ID                           int             `gorm:"primaryKey;column:id"`
+	Username                     string          `gorm:"column:username;size:255"`
+	Email                        string          `gorm:"column:email;size:255"`
+	NotificationEmail            *string         `gorm:"column:notification_email;size:255"`
+	MobilePhone                  string          `gorm:"column:mobile_phone;size:255"`
+	Avatar                       *Avatar         `gorm:"column:avatar;type:jsonb"`
+	Position                     *string         `gorm:"column:position;size:255"`
+	Language                     string          `gorm:"column:language;size:255"`
+	TimeZone                     string          `gorm:"column:time_zone;size:255"`
+	YieldUnits                   string          `gorm:"column:yield_units;size:255"`
+	Status                       string          `gorm:"column:status;size:255"`
+	Dispatcher                   *bool           `gorm:"column:dispatcher"`
+	Driver                       *bool           `gorm:"column:driver"`
+	AdditionalInfo               *string         `gorm:"column:additional_info;type:text"`
+	Description                  *string         `gorm:"column:description;type:text"`
+	RFID                         string          `gorm:"column:rfid;size:255"`
+	LastSignInAt                 *time.Time      `gorm:"column:last_sign_in_at"`
+	CurrentSignInAt              *time.Time      `gorm:"column:current_sign_in_at"`
+	ConsultingCompanyID          *int            `gorm:"column:consulting_company_id"`
+	CreatedAt                    time.Time       `gorm:"column:created_at"`
+	UpdatedAt                    time.Time       `gorm:"column:updated_at"`
+	ExternalID                   *string         `gorm:"column:external_id;size:255"`
+	AuthMethod                   string          `gorm:"column:auth_method;size:255"`
+	CreateScoutReportOutsideOfField *bool        `gorm:"column:create_scout_report_outside_of_field"`
+}
+
+func (User) TableName() string {
+	return "users"
+}
+
+func (a Avatar) Value() (driver.Value, error) {
+	if (a == Avatar{}) {
+		return nil, nil
+	}
+	return json.Marshal(a)
+}
+
+func (a *Avatar) Scan(value interface{}) error {
+	if value == nil {
+		*a = Avatar{}
+		return nil
+	}
+	bytes, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("не удалось преобразовать %T в Avatar", value)
+	}
+	return json.Unmarshal(bytes, a)
 }

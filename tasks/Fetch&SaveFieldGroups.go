@@ -3,28 +3,29 @@ package tasks
 import (
 	"encoding/json"
 	"fmt"
-	"integration-cropwise-v1/database"
-	"integration-cropwise-v1/models"
 	"io"
 	"log"
 	"net/http"
 	"strconv"
+
+	"integration-cropwise-v1/models"
+
+	"gorm.io/gorm"
 )
 
 const FieldGroupsAPIURL = "https://operations.cropwise.com/api/v3/field_groups"
 
-func FetchAndSaveFieldGroups(token string, schemaName string) error {
+func FetchAndSaveFieldGroups(db *gorm.DB, token, schemaName string) error {
 	log.Printf("Начинаем загрузку данных о группах полей для схемы: %s", schemaName)
 
-	// Устанавливаем search_path для схемы компании
 	setSearchPath := fmt.Sprintf("SET search_path TO %s", schemaName)
-	if err := database.DB.Exec(setSearchPath).Error; err != nil {
+	if err := db.Exec(setSearchPath).Error; err != nil {
 		log.Printf("Ошибка установки search_path на %s: %v", schemaName, err)
 		return err
 	}
 	defer func() {
 		resetSearchPath := "SET search_path TO public"
-		if err := database.DB.Exec(resetSearchPath).Error; err != nil {
+		if err := db.Exec(resetSearchPath).Error; err != nil {
 			log.Printf("Ошибка сброса search_path на public: %v", err)
 		}
 	}()
@@ -56,7 +57,7 @@ func FetchAndSaveFieldGroups(token string, schemaName string) error {
 		}
 
 		var response struct {
-			Data []models.FieldGroupModel `json:"data"`
+			Data []models.FieldGroup `json:"data"`
 			Meta struct {
 				Response struct {
 					ObtainedRecords int `json:"obtained_records"`
@@ -68,14 +69,12 @@ func FetchAndSaveFieldGroups(token string, schemaName string) error {
 			return fmt.Errorf("ошибка парсинга JSON: %w", err)
 		}
 
-		// Сохраняем данные в базу
 		for _, fieldGroup := range response.Data {
-			if err := database.DB.Save(&fieldGroup).Error; err != nil {
+			if err := db.Save(&fieldGroup).Error; err != nil {
 				return fmt.Errorf("ошибка сохранения группы полей с ID %d: %w", fieldGroup.ID, err)
 			}
 		}
 
-		// Если больше записей нет, завершаем цикл
 		if response.Meta.Response.ObtainedRecords == 0 {
 			break
 		}

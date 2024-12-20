@@ -11,14 +11,12 @@ import (
 	"strconv"
 )
 
-// Константа для URL API
 const WorkTypesAPIURL = "https://operations.cropwise.com/api/v3/work_types"
 
-// FetchAndSaveWorkTypes - функция для загрузки и сохранения данных work_types
 func FetchAndSaveWorkTypes(token, schemaName string) error {
 	log.Printf("Начинаем загрузку данных work_types для схемы: %s", schemaName)
 
-	// Установить search_path для работы с нужной схемой
+	// Устанавливаем search_path для схемы компании
 	setSearchPath := fmt.Sprintf("SET search_path TO %s", schemaName)
 	if err := database.DB.Exec(setSearchPath).Error; err != nil {
 		log.Printf("Ошибка установки search_path на %s: %v", schemaName, err)
@@ -34,7 +32,6 @@ func FetchAndSaveWorkTypes(token, schemaName string) error {
 	client := &http.Client{}
 	fromID := 0
 
-	// Цикл для обработки пагинации
 	for {
 		url := WorkTypesAPIURL + "?from_id=" + strconv.Itoa(fromID)
 		req, err := http.NewRequest("GET", url, nil)
@@ -43,26 +40,22 @@ func FetchAndSaveWorkTypes(token, schemaName string) error {
 		}
 		req.Header.Set("X-User-Api-Token", token)
 
-		// Выполнить запрос
 		resp, err := client.Do(req)
 		if err != nil {
 			return fmt.Errorf("ошибка выполнения запроса: %w", err)
 		}
 		defer resp.Body.Close()
 
-		// Проверить статус ответа
 		if resp.StatusCode != http.StatusOK {
 			body, _ := io.ReadAll(resp.Body)
-			return fmt.Errorf("ошибка ответа от API: %s, тело: %s", resp.Status, string(body))
+			return fmt.Errorf("ошибка ответа API: %s, тело: %s", resp.Status, string(body))
 		}
 
-		// Прочитать тело ответа
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return fmt.Errorf("ошибка чтения тела ответа: %w", err)
 		}
 
-		// Парсинг JSON
 		var response struct {
 			Data []models.WorkType `json:"data"`
 			Meta struct {
@@ -76,19 +69,16 @@ func FetchAndSaveWorkTypes(token, schemaName string) error {
 			return fmt.Errorf("ошибка парсинга JSON: %w", err)
 		}
 
-		// Сохранение данных в базу
 		for _, workType := range response.Data {
 			if err := database.DB.Save(&workType).Error; err != nil {
 				log.Printf("Ошибка сохранения work_type с ID %d: %v", workType.ID, err)
 			}
 		}
 
-		// Проверка завершения загрузки данных
 		if response.Meta.Response.ObtainedRecords == 0 {
 			break
 		}
 
-		// Обновить fromID для следующего запроса
 		fromID = response.Meta.Response.LastRecordID + 1
 	}
 

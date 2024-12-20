@@ -3,25 +3,32 @@ package tasks
 import (
 	"encoding/json"
 	"fmt"
-	"integration-cropwise-v1/database"
-	"integration-cropwise-v1/models"
 	"io"
 	"log"
 	"net/http"
 	"strconv"
+
+	"integration-cropwise-v1/models"
+
+	"gorm.io/gorm"
 )
 
 const AdditionalObjectsEndpoint = "https://operations.cropwise.com/api/v3/additional_objects"
 
-func FetchAndSaveAdditionalObjects(token, schemaName string) error {
+func FetchAndSaveAdditionalObjects(db *gorm.DB, token, schemaName string) error {
 	log.Printf("Начинаем загрузку данных для схемы: %s", schemaName)
 
 	setSearchPath := fmt.Sprintf("SET search_path TO %s", schemaName)
-	if err := database.DB.Exec(setSearchPath).Error; err != nil {
+	if err := db.Exec(setSearchPath).Error; err != nil {
 		log.Printf("Ошибка установки search_path на %s: %v", schemaName, err)
 		return err
 	}
-	defer resetSearchPath()
+	defer func() {
+		resetSearchPath := "SET search_path TO public"
+		if err := db.Exec(resetSearchPath).Error; err != nil {
+			log.Printf("Ошибка сброса search_path: %v", err)
+		}
+	}()
 
 	client := &http.Client{}
 	fromID := 0
@@ -50,7 +57,7 @@ func FetchAndSaveAdditionalObjects(token, schemaName string) error {
 		}
 
 		var response struct {
-			Data []models.AdditionalObjectModel `json:"data"`
+			Data []models.AdditionalObject `json:"data"`
 			Meta struct {
 				Response struct {
 					ObtainedRecords int `json:"obtained_records"`
@@ -64,7 +71,7 @@ func FetchAndSaveAdditionalObjects(token, schemaName string) error {
 		}
 
 		for _, obj := range response.Data {
-			if err := database.DB.Save(&obj).Error; err != nil {
+			if err := db.Save(&obj).Error; err != nil {
 				return fmt.Errorf("ошибка сохранения объекта ID %d в схеме %s: %w", obj.ID, schemaName, err)
 			}
 		}

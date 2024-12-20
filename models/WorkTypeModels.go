@@ -1,24 +1,29 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
-// WorkType - модель для таблицы work_types
 type WorkType struct {
-	ID                           int        `json:"id" gorm:"primaryKey"`
-	WorkTypeGroupID              int        `json:"work_type_group_id"`
-	Name                         string     `json:"name"`
-	Agri                         bool       `json:"agri"`
-	Application                  bool       `json:"application"`
-	Sowing                       bool       `json:"sowing"`
-	ReSowing                     bool       `json:"re_sowing"`
-	AdditionalSowing             bool       `json:"additional_sowing"`
-	Harvesting                   bool       `json:"harvesting"`
-	Soil                         bool       `json:"soil"`
-	StandardName                 string     `json:"standard_name"`
-	Hidden                       bool       `json:"hidden"`
-	Description                  *string    `json:"description"` // Может быть пустым или null
-	ExternalID                   *string    `json:"external_id"` // Может быть null
-	DisableFirstTrackRuleCoverage bool      `json:"disable_first_track_rule_coverage"`
-	CreatedAt                    time.Time  `json:"created_at"`
-	UpdatedAt                    time.Time  `json:"updated_at"`
+	ID                           uint       `gorm:"primaryKey;column:id"`
+	WorkTypeGroupID              *uint      `gorm:"column:work_type_group_id"`
+	Name                         *string    `gorm:"column:name;size:255"`
+	Agri                         *bool      `gorm:"column:agri"`
+	Application                  *bool      `gorm:"column:application"`
+	Sowing                       *bool      `gorm:"column:sowing"`
+	ReSowing                     *bool      `gorm:"column:re_sowing"`
+	AdditionalSowing             *bool      `gorm:"column:additional_sowing"`
+	Harvesting                   *bool      `gorm:"column:harvesting"`
+	Soil                         *bool      `gorm:"column:soil"`
+	StandardName                 *string    `gorm:"column:standard_name;size:255"`
+	Hidden                       *bool      `gorm:"column:hidden"`
+	Description                  *string    `gorm:"column:description;size:255"`
+	ExternalID                   *string    `gorm:"column:external_id;size:255"`
+	DisableFirstTrackRuleCoverage *bool     `gorm:"column:disable_first_track_rule_coverage"`
+	CreatedAt                    *time.Time `gorm:"column:created_at"`
+	UpdatedAt                    *time.Time `gorm:"column:updated_at"`
+}
+
+func (WorkType) TableName() string {
+	return "work_types"
 }

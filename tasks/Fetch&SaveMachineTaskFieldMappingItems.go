@@ -63,7 +63,7 @@ func FetchAndSaveMachineTaskFieldMappingItems(token, schemaName string) error {
 
 		// Парсим JSON-ответ
 		var response struct {
-			Data []models.MachineTaskFieldMappingItemModel `json:"data"`
+			Data []models.MachineTaskFieldMappingItem `json:"data"`
 			Meta struct {
 				Response struct {
 					ObtainedRecords int `json:"obtained_records"`

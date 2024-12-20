@@ -16,12 +16,18 @@ const AgriWorkPlanApplicationMixItemsEndpoint = "https://operations.cropwise.com
 func FetchAndSaveAgriWorkPlanApplicationMixItems(token, schemaName string) error {
 	log.Printf("Начинаем загрузку данных для схемы: %s", schemaName)
 
+	// Устанавливаем search_path для схемы
 	setSearchPath := fmt.Sprintf("SET search_path TO %s", schemaName)
 	if err := database.DB.Exec(setSearchPath).Error; err != nil {
 		log.Printf("Ошибка установки search_path на %s: %v", schemaName, err)
 		return err
 	}
-	defer resetSearchPath()
+	defer func() {
+		resetSearchPath := "SET search_path TO public"
+		if err := database.DB.Exec(resetSearchPath).Error; err != nil {
+			log.Printf("Ошибка сброса search_path на public: %v", err)
+		}
+	}()
 
 	client := &http.Client{}
 	fromID := 0
@@ -41,7 +47,8 @@ func FetchAndSaveAgriWorkPlanApplicationMixItems(token, schemaName string) error
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
-			return fmt.Errorf("ошибка ответа: %s", resp.Status)
+			body, _ := io.ReadAll(resp.Body)
+			return fmt.Errorf("ошибка ответа: %s, тело: %s", resp.Status, string(body))
 		}
 
 		body, err := io.ReadAll(resp.Body)
@@ -50,7 +57,7 @@ func FetchAndSaveAgriWorkPlanApplicationMixItems(token, schemaName string) error
 		}
 
 		var response struct {
-			Data []models.AgriWorkPlanApplicationMixItemModel `json:"data"`
+			Data []models.ApplicationMixItem `json:"data"`
 			Meta struct {
 				Response struct {
 					ObtainedRecords int `json:"obtained_records"`
@@ -58,14 +65,13 @@ func FetchAndSaveAgriWorkPlanApplicationMixItems(token, schemaName string) error
 				} `json:"response"`
 			} `json:"meta"`
 		}
-		err = json.Unmarshal(body, &response)
-		if err != nil {
+		if err := json.Unmarshal(body, &response); err != nil {
 			return fmt.Errorf("ошибка парсинга JSON: %w", err)
 		}
 
 		for _, item := range response.Data {
 			if err := database.DB.Save(&item).Error; err != nil {
-				return fmt.Errorf("ошибка сохранения ID %d в схеме %s: %w", item.ID, schemaName, err)
+				log.Printf("Ошибка сохранения ApplicationMixItem с ID %d в схеме %s: %v", item.ID, schemaName, err)
 			}
 		}
 
@@ -76,5 +82,6 @@ func FetchAndSaveAgriWorkPlanApplicationMixItems(token, schemaName string) error
 		fromID = response.Meta.Response.LastRecordID + 1
 	}
 
+	log.Printf("Данные ApplicationMixItems успешно загружены для схемы %s", schemaName)
 	return nil
 }

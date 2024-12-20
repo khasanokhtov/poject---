@@ -3,33 +3,38 @@ package tasks
 import (
 	"encoding/json"
 	"fmt"
-	"integration-cropwise-v1/database"
-	"integration-cropwise-v1/models"
 	"io"
 	"log"
 	"net/http"
 	"strconv"
+
+	"integration-cropwise-v1/models"
+
+	"gorm.io/gorm"
 )
 
 const AgriWorkPlansEndpoint = "https://operations.cropwise.com/api/v3/agri_work_plans"
 
-func FetchAndSaveAgriWorkPlans(token, schemaName string) error {
+func FetchAndSaveAgriWorkPlans(db *gorm.DB, token, schemaName string) error {
 	log.Printf("Начинаем загрузку данных для схемы: %s", schemaName)
 
 	setSearchPath := fmt.Sprintf("SET search_path TO %s", schemaName)
-	if err := database.DB.Exec(setSearchPath).Error; err != nil {
+	if err := db.Exec(setSearchPath).Error; err != nil {
 		log.Printf("Ошибка установки search_path на %s: %v", schemaName, err)
 		return err
 	}
-	defer resetSearchPath()
+	defer func() {
+		resetSearchPath := "SET search_path TO public"
+		if err := db.Exec(resetSearchPath).Error; err != nil {
+			log.Printf("Ошибка сброса search_path: %v", err)
+		}
+	}()
 
 	client := &http.Client{}
 	fromID := 0
 
 	for {
 		url := AgriWorkPlansEndpoint + "?from_id=" + strconv.Itoa(fromID)
-		log.Printf("Запрос данных с URL: %s", url)
-
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
 			return fmt.Errorf("ошибка создания запроса: %w", err)
@@ -50,10 +55,9 @@ func FetchAndSaveAgriWorkPlans(token, schemaName string) error {
 		if err != nil {
 			return fmt.Errorf("ошибка чтения ответа: %w", err)
 		}
-		log.Printf("Ответ успешно прочитан для схемы %s, длина ответа: %d байт", schemaName, len(body))
 
 		var response struct {
-			Data []models.AgriWorkPlanModel `json:"data"`
+			Data []models.AgriWorkPlan `json:"data"`
 			Meta struct {
 				Response struct {
 					ObtainedRecords int `json:"obtained_records"`
@@ -65,16 +69,14 @@ func FetchAndSaveAgriWorkPlans(token, schemaName string) error {
 		if err != nil {
 			return fmt.Errorf("ошибка парсинга JSON: %w", err)
 		}
-		log.Printf("Получено %d записей для схемы %s", len(response.Data), schemaName)
 
 		for _, plan := range response.Data {
-			if err := database.DB.Save(&plan).Error; err != nil {
+			if err := db.Save(&plan).Error; err != nil {
 				return fmt.Errorf("ошибка сохранения плана ID %d в схеме %s: %w", plan.ID, schemaName, err)
 			}
 		}
 
 		if response.Meta.Response.ObtainedRecords == 0 {
-			log.Printf("Все данные загружены для схемы %s", schemaName)
 			break
 		}
 

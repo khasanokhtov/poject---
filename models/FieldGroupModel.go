@@ -1,88 +1,28 @@
 package models
 
 import (
-	"database/sql/driver"
-	"fmt"
 	"time"
 )
 
-type customDate time.Time
-
-const customDateFormat = "2006-01-02" // Формат "YYYY-MM-DD"
-
-// UnmarshalJSON - для декодирования JSON
-func (cd *customDate) UnmarshalJSON(b []byte) error {
-	s := string(b)
-	if len(s) > 1 && s[0] == '"' && s[len(s)-1] == '"' {
-		s = s[1 : len(s)-1]
-	}
-	parsedTime, err := time.Parse(customDateFormat, s)
-	if err != nil {
-		return fmt.Errorf("ошибка парсинга даты: %w", err)
-	}
-	*cd = customDate(parsedTime)
-	return nil
+type FieldGroup struct {
+	ID                          int64      `gorm:"primaryKey;column:id"`
+	GroupFolderID               *int64     `gorm:"column:group_folder_id"`
+	Name                        *string    `gorm:"column:name;size:255"`
+	Description                 *string    `gorm:"column:description;type:text"`
+	AdministrativeAreaName      *string    `gorm:"column:administrative_area_name;size:255"`
+	SubAdministrativeAreaName   *string    `gorm:"column:subadministrative_area_name;size:255"`
+	Locality                    *string    `gorm:"column:locality;size:255"`
+	Hidden                      *bool      `gorm:"column:hidden;default:false"`
+	ExternalID                  *string    `gorm:"column:external_id;size:255"`
+	CreatedAt                   *time.Time `gorm:"column:created_at"`
+	UpdatedAt                   *time.Time `gorm:"column:updated_at"`
+	IdempotencyKey              *string    `gorm:"column:idempotency_key;size:255"`
+	LegalEntity                 *string    `gorm:"column:legal_entity;size:255"`
+	MachineTaskDefaultDuration  *int64     `gorm:"column:machine_task_default_duration"`
+	AccountingPeriodClosingDate *time.Time `gorm:"column:accounting_period_closing_date"`
+	MachineTaskDefaultStartTime *string    `gorm:"column:machine_task_default_start_time;size:255"`
 }
 
-// MarshalJSON - для кодирования JSON
-func (cd customDate) MarshalJSON() ([]byte, error) {
-	t := time.Time(cd)
-	return []byte(fmt.Sprintf(`"%s"`, t.Format(customDateFormat))), nil
+func (FieldGroup) TableName() string {
+	return "field_groups"
 }
-
-// ToTime - преобразование в time.Time
-func (cd customDate) ToTime() time.Time {
-	return time.Time(cd)
-}
-
-// Scan - реализация интерфейса sql.Scanner для чтения из базы данных
-func (cd *customDate) Scan(value interface{}) error {
-	switch v := value.(type) {
-	case time.Time:
-		*cd = customDate(v)
-		return nil
-	case []byte:
-		parsedTime, err := time.Parse(customDateFormat, string(v))
-		if err != nil {
-			return fmt.Errorf("ошибка парсинга даты: %w", err)
-		}
-		*cd = customDate(parsedTime)
-		return nil
-	case string:
-		parsedTime, err := time.Parse(customDateFormat, v)
-		if err != nil {
-			return fmt.Errorf("ошибка парсинга даты: %w", err)
-		}
-		*cd = customDate(parsedTime)
-		return nil
-	}
-	return fmt.Errorf("неподдерживаемый тип: %T", value)
-}
-
-// Value - реализация интерфейса driver.Valuer для записи в базу данных
-func (cd customDate) Value() (driver.Value, error) {
-	t := time.Time(cd)
-	return t.Format(customDateFormat), nil
-}
-
-
-
-type FieldGroupModel struct {
-	ID                          uint      `json:"id" gorm:"primaryKey"`
-	GroupFolderID               uint      `json:"group_folder_id"`
-	Name                        string    `json:"name" gorm:"not null"`
-	Description                 string    `json:"description"`
-	AdministrativeAreaName      string    `json:"administrative_area_name"`
-	SubAdministrativeAreaName   string    `json:"subadministrative_area_name"`
-	Locality                    string    `json:"locality"`
-	Hidden                      bool      `json:"hidden"`
-	ExternalID                  *string   `json:"external_id"`
-	CreatedAt                   time.Time `json:"created_at"`
-	UpdatedAt                   time.Time `json:"updated_at"`
-	IdempotencyKey              *string   `json:"idempotency_key"`
-	LegalEntity                 string    `json:"legal_entity"`
-	MachineTaskDefaultDuration  uint      `json:"machine_task_default_duration"`
-	AccountingPeriodClosingDate customDate `json:"accounting_period_closing_date" gorm:"type:date"`
-	MachineTaskDefaultStartTime string    `json:"machine_task_default_start_time"`
-}
-

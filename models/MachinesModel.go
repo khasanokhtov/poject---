@@ -1,61 +1,52 @@
 package models
 
-type MachineResponse struct {
-	Data []MachineModel `json:"data"`
-	Meta struct {
-		Request struct {
-			FromID     int    `json:"from_id"`
-			Limit      *int   `json:"limit"`
-			ServerTime string `json:"server_time"`
-		} `json:"request"`
-		Response struct {
-			Limit           int `json:"limit"`
-			ObtainedRecords int `json:"obtained_records"`
-			FirstRecordID   int `json:"first_record_id"`
-			LastRecordID    int `json:"last_record_id"`
-		} `json:"response"`
-	} `json:"meta"`
+import (
+	"time"
+)
+
+type Machine struct {
+	ID                        int64      `gorm:"primaryKey;column:id"`
+	Name                      *string    `gorm:"column:name;size:255"`
+	Model                     *string    `gorm:"column:model;size:255"`
+	Manufacturer              *string    `gorm:"column:manufacturer;size:255"`
+	Year                      *int64     `gorm:"column:year"`
+	RegistrationNumber        *string    `gorm:"column:registration_number;size:255"`
+	InventoryNumber           *string    `gorm:"column:inventory_number;size:255"`
+	MachineGroupID            *int64     `gorm:"column:machine_group_id"`
+	MachineType               *string    `gorm:"column:machine_type;size:255"`
+	MachineSubtype            *string    `gorm:"column:machine_subtype;size:255"`
+	AvatarID                  *int64     `gorm:"column:avatar_id"`
+	ChassisSerialNumber       *string    `gorm:"column:chassis_serial_number;size:255"`
+	EngineSerialNumber        *string    `gorm:"column:engine_serial_number;size:255"`
+	EnginePower               *float64   `gorm:"column:engine_power"`
+	FuelType                  *string    `gorm:"column:fuel_type;size:255"`
+	FuelTankSize              *float64   `gorm:"column:fuel_tank_size"`
+	FuelConsumptionNorm       *float64   `gorm:"column:fuel_consumption_norm"`
+	LegalCompany              *string    `gorm:"column:legal_company;size:255"`
+	Description               *string    `gorm:"column:description;type:text"`
+	DefaultImplementID        *int64     `gorm:"column:default_implement_id"`
+	DefaultDriverID           *int64     `gorm:"column:default_driver_id"`
+	Additional1               *string    `gorm:"column:additional_1;size:255"`
+	Additional2               *string    `gorm:"column:additional_2;size:255"`
+	AdditionalInfo            *string    `gorm:"column:additional_info;type:text"`
+	PhoneNumber               *string    `gorm:"column:phone_number;size:255"`
+	CreatedAt                 *time.Time `gorm:"column:created_at"`
+	UpdatedAt                 *time.Time `gorm:"column:updated_at"`
+	ExternalID                *int64     `gorm:"column:external_id"`
+	MachineryModelID          *int64     `gorm:"column:machinery_model_id"`
+	FuelTypeID                *int64     `gorm:"column:fuel_type_id"`
+	RefuelSource              *string    `gorm:"column:refuel_source;size:255"`
+	MachineryManufacturerID   *int64     `gorm:"column:machinery_manufacturer_id"`
+	EngineCapacity            *float64   `gorm:"column:engine_capacity"`
+	Weight                    *float64   `gorm:"column:weight"`
+	Height                    *float64   `gorm:"column:height"`
+	Width                     *float64   `gorm:"column:width"`
+	Length                    *float64   `gorm:"column:length"`
+	UnchangedDefaultImplement *bool      `gorm:"column:unchanged_default_implement"`
+	MinDowntimeInSeconds      *int64     `gorm:"column:min_downtime_in_seconds"`
+	CalculateDowntimes        *string    `gorm:"column:calculate_downtimes;size:255"`
 }
 
-type MachineModel struct {
-	ID                        int      `json:"id"`
-	Name                      string   `json:"name"`
-	Model                     string   `json:"model"`
-	Manufacturer              string   `json:"manufacturer"`
-	Year                      *int     `json:"year"` // Может быть null
-	RegistrationNumber        string   `json:"registration_number"`
-	InventoryNumber           string   `json:"inventory_number"`
-	MachineGroupID            int      `json:"machine_group_id"`
-	MachineType               string   `json:"machine_type"`
-	MachineSubtype            string   `json:"machine_subtype"`
-	AvatarID                  int      `json:"avatar_id"`
-	ChassisSerialNumber       string   `json:"chassis_serial_number"`
-	EngineSerialNumber        string   `json:"engine_serial_number"`
-	EnginePower               *float64 `json:"engine_power"` // Может быть null
-	FuelType                  string   `json:"fuel_type"`
-	FuelTankSize              *float64 `json:"fuel_tank_size"`        // Может быть null
-	FuelConsumptionNorm       *float64 `json:"fuel_consumption_norm"` // Может быть null
-	LegalCompany              string   `json:"legal_company"`
-	Description               string   `json:"description"`
-	DefaultImplementID        *int     `json:"default_implement_id"` // Может быть null
-	DefaultDriverID           int      `json:"default_driver_id"`
-	Additional1               *string  `json:"additional_1"` // Может быть null
-	Additional2               *string  `json:"additional_2"` // Может быть null
-	AdditionalInfo            string   `json:"additional_info"`
-	PhoneNumber               string   `json:"phone_number"`
-	CreatedAt                 string   `json:"created_at"`
-	UpdatedAt                 string   `json:"updated_at"`
-	ExternalID                *string  `json:"external_id"` // Может быть null
-	MachineryModelID          int      `json:"machinery_model_id"`
-	FuelTypeID                int      `json:"fuel_type_id"`
-	RefuelSource              string   `json:"refuel_source"`
-	MachineryManufacturerID   int      `json:"machinery_manufacturer_id"`
-	EngineCapacity            *float64 `json:"engine_capacity"` // Может быть null
-	Weight                    *float64 `json:"weight"`          // Может быть null
-	Height                    *float64 `json:"height"`          // Может быть null
-	Width                     *float64 `json:"width"`           // Может быть null
-	Length                    *float64 `json:"length"`          // Может быть null
-	UnchangedDefaultImplement bool     `json:"unchanged_default_implement"`
-	MinDowntimeInSeconds      int      `json:"min_downtime_in_seconds"`
-	CalculateDowntimes        string   `json:"calculate_downtimes"`
+func (Machine) TableName() string {
+	return "machines"
 }

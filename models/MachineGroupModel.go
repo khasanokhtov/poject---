@@ -4,13 +4,16 @@ import (
 	"time"
 )
 
-// MachineGroupModel - структура для хранения данных о группах машин
-type MachineGroupModel struct {
-	ID             uint      `json:"id" gorm:"primaryKey"`
-	Name           string    `json:"name" gorm:"not null"`
-	AdditionalInfo string    `json:"additional_info"`
-	Description    string    `json:"description"`
-	ExternalID     *string   `json:"external_id"`
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
+type MachineGroup struct {
+	ID             int64      `gorm:"primaryKey;column:id"`
+	Name           *string    `gorm:"column:name;size:255"`
+	AdditionalInfo *string    `gorm:"column:additional_info;type:text"`
+	Description    *string    `gorm:"column:description;type:text"`
+	ExternalID     *string    `gorm:"column:external_id;size:255"`
+	CreatedAt      *time.Time `gorm:"column:created_at"`
+	UpdatedAt      *time.Time `gorm:"column:updated_at"`
+}
+
+func (MachineGroup) TableName() string {
+	return "machine_groups"
 }

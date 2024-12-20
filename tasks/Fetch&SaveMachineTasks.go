@@ -11,11 +11,10 @@ import (
 	"strconv"
 )
 
-const MachineTasksAPIURL = "https://operations.cropwise.com/api/v3a/machine_tasks"
+const MachineTasksEndpoint = "https://operations.cropwise.com/api/v3a/machine_tasks"
 
-// FetchAndSaveMachineTasks - функция для загрузки и сохранения данных machine_tasks
 func FetchAndSaveMachineTasks(token, schemaName string) error {
-	log.Printf("Начинаем загрузку данных для схемы: %s", schemaName)
+	log.Printf("Начинаем загрузку данных Machine Tasks для схемы: %s", schemaName)
 
 	setSearchPath := fmt.Sprintf("SET search_path TO %s", schemaName)
 	if err := database.DB.Exec(setSearchPath).Error; err != nil {
@@ -33,7 +32,7 @@ func FetchAndSaveMachineTasks(token, schemaName string) error {
 	fromID := 0
 
 	for {
-		url := MachineTasksAPIURL + "?from_id=" + strconv.Itoa(fromID)
+		url := MachineTasksEndpoint + "?from_id=" + strconv.Itoa(fromID)
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
 			return fmt.Errorf("ошибка создания запроса: %w", err)
@@ -56,7 +55,7 @@ func FetchAndSaveMachineTasks(token, schemaName string) error {
 		}
 
 		var response struct {
-			Data []models.MachineTaskModel `json:"data"`
+			Data []models.MachineTask `json:"data"`
 			Meta struct {
 				Response struct {
 					ObtainedRecords int `json:"obtained_records"`
@@ -70,7 +69,7 @@ func FetchAndSaveMachineTasks(token, schemaName string) error {
 
 		for _, task := range response.Data {
 			if err := database.DB.Save(&task).Error; err != nil {
-				return fmt.Errorf("ошибка сохранения machine_task с ID %d: %w", task.ID, err)
+				return fmt.Errorf("ошибка сохранения Machine Task с ID %d: %w", task.ID, err)
 			}
 		}
 
@@ -81,6 +80,5 @@ func FetchAndSaveMachineTasks(token, schemaName string) error {
 		fromID = response.Meta.Response.LastRecordID + 1
 	}
 
-	log.Printf("Данные machine_tasks успешно загружены для схемы %s", schemaName)
 	return nil
 }

@@ -3,33 +3,38 @@ package tasks
 import (
 	"encoding/json"
 	"fmt"
-	"integration-cropwise-v1/database"
-	"integration-cropwise-v1/models"
 	"io"
 	"log"
 	"net/http"
 	"strconv"
+
+	"integration-cropwise-v1/models"
+
+	"gorm.io/gorm"
 )
 
+const MachinesAPIURL = "https://operations.cropwise.com/api/v3/machines"
 
-const MachineEndpoint = "https://operations.cropwise.com/api/v3/machines"
-
-
-func FetchAndSaveMachines(token, schemaName string) error {
+func FetchAndSaveMachines(db *gorm.DB, token, schemaName string) error {
 	log.Printf("Начинаем загрузку данных для схемы: %s", schemaName)
 
 	setSearchPath := fmt.Sprintf("SET search_path TO %s", schemaName)
-	if err := database.DB.Exec(setSearchPath).Error; err != nil {
+	if err := db.Exec(setSearchPath).Error; err != nil {
 		log.Printf("Ошибка установки search_path на %s: %v", schemaName, err)
 		return err
 	}
-	defer resetSearchPath()
+	defer func() {
+		resetSearchPath := "SET search_path TO public"
+		if err := db.Exec(resetSearchPath).Error; err != nil {
+			log.Printf("Ошибка сброса search_path на public: %v", err)
+		}
+	}()
 
 	client := &http.Client{}
 	fromID := 0
 
 	for {
-		url := MachineEndpoint + "?from_id=" + strconv.Itoa(fromID)
+		url := MachinesAPIURL + "?from_id=" + strconv.Itoa(fromID)
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
 			return fmt.Errorf("ошибка создания запроса: %w", err)
@@ -52,7 +57,7 @@ func FetchAndSaveMachines(token, schemaName string) error {
 		}
 
 		var response struct {
-			Data []models.MachineModel `json:"data"`
+			Data []models.Machine `json:"data"`
 			Meta struct {
 				Response struct {
 					ObtainedRecords int `json:"obtained_records"`
@@ -60,13 +65,12 @@ func FetchAndSaveMachines(token, schemaName string) error {
 				} `json:"response"`
 			} `json:"meta"`
 		}
-		err = json.Unmarshal(body, &response)
-		if err != nil {
+		if err := json.Unmarshal(body, &response); err != nil {
 			return fmt.Errorf("ошибка парсинга JSON: %w", err)
 		}
 
 		for _, machine := range response.Data {
-			if err := database.DB.Save(&machine).Error; err != nil {
+			if err := db.Save(&machine).Error; err != nil {
 				return fmt.Errorf("ошибка сохранения машины ID %d: %w", machine.ID, err)
 			}
 		}
@@ -79,12 +83,4 @@ func FetchAndSaveMachines(token, schemaName string) error {
 	}
 
 	return nil
-}
-
-func resetSearchPath() {
-	resetSearchPath := "SET search_path TO public"
-	if err := database.DB.Exec(resetSearchPath).Error; err != nil {
-		log.Printf("Ошибка сброса search_path на public: %v", err)
-	}
-	log.Printf("search_path успешно сброшен на public")
 }

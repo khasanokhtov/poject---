@@ -11,10 +11,10 @@ import (
 	"strconv"
 )
 
-const FieldScoutReportsAPIURL = "https://operations.cropwise.com/api/v3/field_scout_reports"
+const SeedsAPIURL = "https://operations.cropwise.com/api/v3/seeds"
 
-func FetchAndSaveFieldScoutReports(token string, schemaName string) error {
-	log.Printf("Начинаем загрузку данных скаут-отчетов для схемы: %s", schemaName)
+func FetchAndSaveSeeds(token, schemaName string) error {
+	log.Printf("Начинаем загрузку данных Seeds для схемы: %s", schemaName)
 
 	// Устанавливаем search_path для схемы компании
 	setSearchPath := fmt.Sprintf("SET search_path TO %s", schemaName)
@@ -33,7 +33,7 @@ func FetchAndSaveFieldScoutReports(token string, schemaName string) error {
 	fromID := 0
 
 	for {
-		url := FieldScoutReportsAPIURL + "?from_id=" + strconv.Itoa(fromID)
+		url := SeedsAPIURL + "?from_id=" + strconv.Itoa(fromID)
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
 			return fmt.Errorf("ошибка создания запроса: %w", err)
@@ -47,16 +47,16 @@ func FetchAndSaveFieldScoutReports(token string, schemaName string) error {
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
-			return fmt.Errorf("ошибка ответа: %s", resp.Status)
+			return fmt.Errorf("ошибка ответа API: %s", resp.Status)
 		}
 
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			return fmt.Errorf("ошибка чтения ответа: %w", err)
+			return fmt.Errorf("ошибка чтения тела ответа: %w", err)
 		}
 
 		var response struct {
-			Data []models.FieldScoutReportModel `json:"data"`
+			Data []models.Seed `json:"data"`
 			Meta struct {
 				Response struct {
 					ObtainedRecords int `json:"obtained_records"`
@@ -64,18 +64,17 @@ func FetchAndSaveFieldScoutReports(token string, schemaName string) error {
 				} `json:"response"`
 			} `json:"meta"`
 		}
+
 		if err := json.Unmarshal(body, &response); err != nil {
 			return fmt.Errorf("ошибка парсинга JSON: %w", err)
 		}
 
-		// Сохраняем данные в базу
-		for _, fieldScoutReport := range response.Data {
-			if err := database.DB.Save(&fieldScoutReport).Error; err != nil {
-				return fmt.Errorf("ошибка сохранения скаут-отчета с ID %d: %w", fieldScoutReport.ID, err)
+		for _, seed := range response.Data {
+			if err := database.DB.Save(&seed).Error; err != nil {
+				return fmt.Errorf("ошибка сохранения семени с ID %d: %w", seed.ID, err)
 			}
 		}
 
-		// Проверяем, нужно ли продолжать загружать данные
 		if response.Meta.Response.ObtainedRecords == 0 {
 			break
 		}
@@ -83,5 +82,6 @@ func FetchAndSaveFieldScoutReports(token string, schemaName string) error {
 		fromID = response.Meta.Response.LastRecordID + 1
 	}
 
+	log.Printf("Данные Seeds успешно загружены для схемы %s", schemaName)
 	return nil
 }

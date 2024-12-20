@@ -3,18 +3,20 @@ package tasks
 import (
 	"encoding/json"
 	"fmt"
-	"integration-cropwise-v1/database"
-	"integration-cropwise-v1/models"
 	"io"
 	"log"
 	"net/http"
 	"strconv"
+
+	"integration-cropwise-v1/models"
+
+	"gorm.io/gorm"
 )
 
 const MachineRegionsAPIURL = "https://operations.cropwise.com/api/v3/machine_regions"
 
 type MachineRegionsResponse struct {
-	Data []models.MachineRegionModel `json:"data"`
+	Data []models.MachineRegion `json:"data"`
 	Meta struct {
 		Response struct {
 			ObtainedRecords int `json:"obtained_records"`
@@ -23,19 +25,17 @@ type MachineRegionsResponse struct {
 	} `json:"meta"`
 }
 
-// FetchAndSaveMachineRegions - функция для загрузки и сохранения данных о регионах машин
-func FetchAndSaveMachineRegions(token string, schemaName string) error {
+func FetchAndSaveMachineRegions(db *gorm.DB, token, schemaName string) error {
 	log.Printf("Начинаем загрузку MachineRegions для схемы: %s", schemaName)
 
-	// Устанавливаем search_path для схемы компании
 	setSearchPath := fmt.Sprintf("SET search_path TO %s", schemaName)
-	if err := database.DB.Exec(setSearchPath).Error; err != nil {
+	if err := db.Exec(setSearchPath).Error; err != nil {
 		log.Printf("Ошибка установки search_path на %s: %v", schemaName, err)
 		return err
 	}
 	defer func() {
 		resetSearchPath := "SET search_path TO public"
-		if err := database.DB.Exec(resetSearchPath).Error; err != nil {
+		if err := db.Exec(resetSearchPath).Error; err != nil {
 			log.Printf("Ошибка сброса search_path на public: %v", err)
 		}
 	}()
@@ -71,14 +71,12 @@ func FetchAndSaveMachineRegions(token string, schemaName string) error {
 			return fmt.Errorf("ошибка парсинга JSON: %w", err)
 		}
 
-		// Сохраняем данные в базу
 		for _, region := range response.Data {
-			if err := database.DB.Save(&region).Error; err != nil {
+			if err := db.Save(&region).Error; err != nil {
 				return fmt.Errorf("ошибка сохранения machine_region с ID %d: %w", region.ID, err)
 			}
 		}
 
-		// Проверяем, нужно ли продолжать загрузку данных
 		if response.Meta.Response.ObtainedRecords == 0 {
 			break
 		}

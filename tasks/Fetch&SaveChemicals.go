@@ -3,28 +3,29 @@ package tasks
 import (
 	"encoding/json"
 	"fmt"
-	"integration-cropwise-v1/database"
-	"integration-cropwise-v1/models"
 	"io"
 	"log"
 	"net/http"
 	"strconv"
+
+	"integration-cropwise-v1/models"
+
+	"gorm.io/gorm"
 )
 
 const ChemicalsEndpoint = "https://operations.cropwise.com/api/v3/chemicals"
 
-func FetchAndSaveChemicals(token, schemaName string) error {
+func FetchAndSaveChemicals(db *gorm.DB, token, schemaName string) error {
 	log.Printf("Начинаем загрузку данных для схемы: %s", schemaName)
 
-	// Устанавливаем search_path для схемы компании
 	setSearchPath := fmt.Sprintf("SET search_path TO %s", schemaName)
-	if err := database.DB.Exec(setSearchPath).Error; err != nil {
+	if err := db.Exec(setSearchPath).Error; err != nil {
 		log.Printf("Ошибка установки search_path на %s: %v", schemaName, err)
 		return err
 	}
 	defer func() {
 		resetSearchPath := "SET search_path TO public"
-		if err := database.DB.Exec(resetSearchPath).Error; err != nil {
+		if err := db.Exec(resetSearchPath).Error; err != nil {
 			log.Printf("Ошибка сброса search_path на public: %v", err)
 		}
 	}()
@@ -56,7 +57,7 @@ func FetchAndSaveChemicals(token, schemaName string) error {
 		}
 
 		var response struct {
-			Data []models.ChemicalModel `json:"data"`
+			Data []models.Chemical `json:"data"`
 			Meta struct {
 				Response struct {
 					ObtainedRecords int `json:"obtained_records"`
@@ -69,15 +70,7 @@ func FetchAndSaveChemicals(token, schemaName string) error {
 		}
 
 		for _, chemical := range response.Data {
-			// Логика сохранения активных веществ в строковом формате JSON
-			activeSubstancesJSON, err := json.Marshal(chemical.ActiveSubstances)
-			if err != nil {
-				return fmt.Errorf("ошибка сериализации активных веществ для химиката ID %d: %w", chemical.ID, err)
-			}
-			activeSubstancesStr := string(activeSubstancesJSON)
-			chemical.ActiveSubstance = &activeSubstancesStr // Преобразуем в указатель на строку
-		
-			if err := database.DB.Save(&chemical).Error; err != nil {
+			if err := db.Save(&chemical).Error; err != nil {
 				return fmt.Errorf("ошибка сохранения химиката ID %d: %w", chemical.ID, err)
 			}
 		}
