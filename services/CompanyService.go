@@ -160,6 +160,7 @@ func MigrateExistingSchemas() error {
 			&models.User{},
 			&models.WorkType{},
 			&models.WorkTypeGroup{},
+			&models.PlanFact{},
 			); err != nil {
             log.Printf("Ошибка миграции для схемы %s: %v", schemaName, err)
             return err
@@ -233,6 +234,7 @@ func CreateSchema(companyName string) error {
 		{&models.User{}, "users"},
 		{&models.WorkType{}, "work_type"},
 		{&models.WorkTypeGroup{}, "work_type_group"},
+		{&models.PlanFact{}, "planfact"},
 	}
 
 	for _, table := range tables {

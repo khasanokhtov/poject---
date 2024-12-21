@@ -12,8 +12,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-
-
 func main() {
 	logFile, err := os.OpenFile("application.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
@@ -24,22 +22,28 @@ func main() {
 	// Установка вывода логов в файл
 	log.SetOutput(logFile)
 	log.Println("Логирование начато")
-	
-	//DB Connect
-	database.ConnectDB()
+
+	// DB Connect
+	db , err := database.ConnectDB()
+	if err !=nil {
+		log.Fatalf("Ошибка подключения к базе данных: %v", err)
+	}
 	app := fiber.New()
+
+	// Настройка маршрутов
 	routes.SetupAuthRoutes(app)
 	routes.SetupCompanyRoutes(app)
+	routes.SetupPlanFactRoutes(app, db) // Добавлен маршрут для отчета план-факт
+
+	// Запуск сервера
 	log.Fatal(app.Listen(":3000"))
 
-	 // Миграция существующих схем
+	// Миграция существующих схем
 	if err := services.MigrateExistingSchemas(); err != nil {
-        log.Fatalf("Ошибка миграции существующих схем: %v", err)
-    }
+		log.Fatalf("Ошибка миграции существующих схем: %v", err)
+	}
 
-	
-	
-	//Запуск worker-пула
+	// Запуск worker-пула
 	go func() {
 		for {
 			log.Println("Начало ежедневного обновления данных.")
@@ -49,5 +53,4 @@ func main() {
 		}
 	}()
 	log.Println("Все компании успешно обработаны.")
-	
 }

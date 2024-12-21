@@ -10,7 +10,7 @@ import (
 
 var DB *gorm.DB
 
-func ConnectDB() {
+func ConnectDB()(*gorm.DB, error) {
 	dsn := "host=localhost user=postgres password=123654 dbname=postgres port=5432 sslmode=disable"
 	var err error
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -29,4 +29,6 @@ func ConnectDB() {
 	if err != nil {
 		log.Fatalf("Ошибка миграции базы данных: %v", err)
 	}
+	
+	return DB, nil
 }
