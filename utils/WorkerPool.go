@@ -31,75 +31,79 @@ func FetchDataForCompany(company models.Company) error{
 
 	for _, company := range companies {
 		log.Printf("Обрабатываем компанию: %s", company.Name)
-		if err := tasks.FetchAndSaveMachines(company.Token, company.SchemaName); err != nil {
+		if err := tasks.FetchAndSaveMachines(database.DB,company.Token, company.SchemaName); err != nil {
 			log.Printf("Ошибка загрузки машин для компании %s: %v", company.Name, err)
 			continue
 		}
-		if err := tasks.FetchAndSaveAdditionalObjects(company.Token, company.SchemaName); err != nil {
+		if err := tasks.FetchAndSaveAdditionalObjects(database.DB,company.Token, company.SchemaName); err != nil {
 			log.Printf("Ошибка загрузки дополнительных объектов для компании %s: %v", company.Name, err)
 			continue
 		}
-		if err := tasks.FetchAndSaveAgriWorkPlans(company.Token, company.SchemaName); err != nil {
+		if err := tasks.FetchAndSaveChemicals(database.DB,company.Token, company.SchemaName); err != nil {
+			log.Printf("Ошибка загрузки дополнительных объектов для компании %s: %v", company.Name, err)
+			continue
+		}
+		if err := tasks.FetchAndSaveAgriWorkPlans(database.DB,company.Token, company.SchemaName); err != nil {
 			log.Printf("Ошибка загрузки агроопераций для компании %s: %v", company.Name, err)
 			continue
 		}
-		if err := tasks.FetchAndSaveAgriWorkPlanApplicationMixItems(company.Token, company.SchemaName); err != nil {
+		if err := tasks.FetchAndSaveAgriWorkPlanApplicationMixItems(database.DB,company.Token, company.SchemaName); err != nil {
 			log.Printf("Ошибка загрузки agriworkplan_application_mix_items для компании %s: %v", company.Name, err)
 			continue
 		}
-		if err := tasks.FetchAndSaveAgroOperations(company.Token, company.SchemaName); err != nil {
+		if err := tasks.FetchAndSaveAgroOperations(database.DB,company.Token, company.SchemaName); err != nil {
 			log.Printf("Ошибка загрузки химии agro_operations компании %s: %v", company.Name, err)
 			continue
 		}
-		if err := tasks.FetchAndSaveApplicationMixItems(company.Token, company.SchemaName); err != nil {
+		if err := tasks.FetchAndSaveApplicationMixItems(database.DB,company.Token, company.SchemaName); err != nil {
 			log.Printf("Ошибка загрузки application_mix_items для компании %s: %v", company.Name, err)
 			continue
 		}
-		if err := tasks.FetchAndSaveCrops(company.Token, company.SchemaName); err != nil {
+		if err := tasks.FetchAndSaveCrops(database.DB,company.Token, company.SchemaName); err != nil {
 			log.Printf("Ошибка загрузки crops для компании %s: %v", company.Name, err)
 			continue
 		}
-		if err := tasks.FetchAndSaveFertilizers(company.Token, company.SchemaName); err != nil {
+		if err := tasks.FetchAndSaveFertilizers(database.DB,company.Token, company.SchemaName); err != nil {
 			log.Printf("Ошибка загрузки fertilizers для компании %s: %v", company.Name, err)
 			continue
 		}
-		if err := tasks.FetchAndSaveFieldGroups(company.Token, company.SchemaName); err != nil {
+		if err := tasks.FetchAndSaveFieldGroups(database.DB,company.Token, company.SchemaName); err != nil {
 			log.Printf("Ошибка загрузки field_groups для компании %s: %v", company.Name, err)
 			continue
 		}
-		if err := tasks.FetchAndSaveFields(company.Token, company.SchemaName); err != nil {
+		if err := tasks.FetchAndSaveFields(database.DB,company.Token, company.SchemaName); err != nil {
 			log.Printf("Ошибка загрузки fields для компании %s: %v", company.Name, err)
 			continue
 		}
-		if err := tasks.FetchAndSaveFuelTypes(company.Token, company.SchemaName); err != nil {
+		if err := tasks.FetchAndSaveFuelTypes(database.DB,company.Token, company.SchemaName); err != nil {
 			log.Printf("Ошибка загрузки fuel_type для компании %s: %v", company.Name, err)
 			continue
 		}
-		if err := tasks.FetchAndSaveGroupFolders(company.Token, company.SchemaName); err != nil {
+		if err := tasks.FetchAndSaveGroupFolders(database.DB,company.Token, company.SchemaName); err != nil {
 			log.Printf("Ошибка загрузки group_folders для компании %s: %v", company.Name, err)
 			continue
 		}
-		if err := tasks.FetchAndSaveHarvestWeighings(company.Token, company.SchemaName); err != nil {
+		if err := tasks.FetchAndSaveHarvestWeighings(database.DB,company.Token, company.SchemaName); err != nil {
 			log.Printf("Ошибка загрузки harvest_weighings для компании %s: %v", company.Name, err)
 			continue
 		}
-		if err := tasks.FetchAndSaveHistoryItems(company.Token, company.SchemaName); err != nil {
+		if err := tasks.FetchAndSaveHistoryItems(database.DB,company.Token, company.SchemaName); err != nil {
 			log.Printf("Ошибка загрузки history_items для компании %s: %v", company.Name, err)
 			continue
 		}
-		if err := tasks.FetchAndSaveImplements(company.Token, company.SchemaName); err != nil {
+		if err := tasks.FetchAndSaveImplements(database.DB,company.Token, company.SchemaName); err != nil {
 			log.Printf("Ошибка загрузки implemets для компании %s: %v", company.Name, err)
 			continue
 		}
-		if err := tasks.FetchAndSaveMachineRegions(company.Token, company.SchemaName); err != nil {
+		if err := tasks.FetchAndSaveMachineRegions(database.DB,company.Token, company.SchemaName); err != nil {
 			log.Printf("Ошибка загрузки machine_regions для компании %s: %v", company.Name, err)
 			continue
 		}
-		if err := tasks.FetchAndSaveMachineRegionMappingItems(company.Token, company.SchemaName); err != nil {
+		if err := tasks.FetchAndSaveMachineRegionMappingItems(database.DB,company.Token, company.SchemaName); err != nil {
 			log.Printf("Ошибка загрузки machine_region_mapping_item для компании %s: %v", company.Name, err)
 			continue
 		}
-		if err := tasks.FetchAndSaveMachineGroups(company.Token, company.SchemaName); err != nil {
+		if err := tasks.FetchAndSaveMachineGroups(database.DB,company.Token, company.SchemaName); err != nil {
 			log.Printf("Ошибка загрузки machine_groups для компании %s: %v", company.Name, err)
 			continue
 		}
@@ -119,7 +123,7 @@ func FetchDataForCompany(company models.Company) error{
 			log.Printf("Ошибка загрузки machine_task для компании %s: %v", company.Name, err)
 			continue
 		}
-		if err := tasks.FetchAndSaveUsers(company.Token, company.SchemaName); err != nil {
+		if err := tasks.FetchAndSaveUsers(database.DB,company.Token, company.SchemaName); err != nil {
 			log.Printf("Ошибка загрузки users для компании %s: %v", company.Name, err)
 			continue
 		}

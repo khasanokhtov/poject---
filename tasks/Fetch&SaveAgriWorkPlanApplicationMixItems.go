@@ -9,16 +9,18 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+
+	"gorm.io/gorm"
 )
 
 const AgriWorkPlanApplicationMixItemsEndpoint = "https://operations.cropwise.com/api/v3/agri_work_plan_application_mix_items"
 
-func FetchAndSaveAgriWorkPlanApplicationMixItems(token, schemaName string) error {
+func FetchAndSaveAgriWorkPlanApplicationMixItems(db *gorm.DB, token, schemaName string) error {
 	log.Printf("Начинаем загрузку данных для схемы: %s", schemaName)
 
 	// Устанавливаем search_path для схемы
 	setSearchPath := fmt.Sprintf("SET search_path TO %s", schemaName)
-	if err := database.DB.Exec(setSearchPath).Error; err != nil {
+	if err := db.Exec(setSearchPath).Error; err != nil {
 		log.Printf("Ошибка установки search_path на %s: %v", schemaName, err)
 		return err
 	}
@@ -57,7 +59,7 @@ func FetchAndSaveAgriWorkPlanApplicationMixItems(token, schemaName string) error
 		}
 
 		var response struct {
-			Data []models.ApplicationMixItem `json:"data"`
+			Data []models.AgriWorkPlanApplicationMixItem `json:"data"`
 			Meta struct {
 				Response struct {
 					ObtainedRecords int `json:"obtained_records"`

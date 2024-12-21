@@ -6,9 +6,13 @@ import (
 
 // MachineTaskAgriWorkPlanMappingItemModel - структура для хранения данных связи задач машин и агропланов
 type MachineTaskAgriWorkPlanMappingItemModel struct {
-	ID             uint      `json:"id" gorm:"primaryKey"`
-	MachineTaskID  uint      `json:"machine_task_id"`
-	AgriWorkPlanID uint      `json:"agri_work_plan_id"`
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
+	ID             uint      `gorm:"primaryKey;column:id" json:"id"`
+	MachineTaskID  uint      `gorm:"column:machine_task_id" json:"machine_task_id"`
+	AgriWorkPlanID uint      `gorm:"column:agri_work_plan_id" json:"agri_work_plan_id"`
+	CreatedAt      time.Time `gorm:"column:created_at" json:"created_at"`
+	UpdatedAt      time.Time `gorm:"column:updated_at" json:"updated_at"`
+}
+
+func (MachineTaskAgriWorkPlanMappingItemModel) TableName() string {
+	return "machines_task_agro_work_plan_mapping_item"
 }
