@@ -5,7 +5,7 @@ import (
 )
 
 
-type AgroOperation struct {
+type AgroOperations struct {
 	ID                          int        `gorm:"primaryKey;column:id" json:"id"`
 	FieldID                     *int       `gorm:"column:field_id" json:"field_id"`
 	FieldShapeID                *int       `gorm:"column:field_shape_id" json:"field_shape_id"`
@@ -44,6 +44,6 @@ type AgroOperation struct {
 	UpdatedAt                   *time.Time `gorm:"column:updated_at" json:"updated_at"`
 }
 
-func (AgroOperation) TableName() string {
+func (AgroOperations) TableName() string {
 	return "agro_operations"
 }

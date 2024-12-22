@@ -56,7 +56,7 @@ func FetchAndSaveAgroOperations(db *gorm.DB, token, schemaName string) error {
 		}
 
 		var response struct {
-			Data []models.AgroOperation `json:"data"`
+			Data []models.AgroOperations `json:"data"`
 			Meta struct {
 				Response struct {
 					ObtainedRecords int `json:"obtained_records"`
