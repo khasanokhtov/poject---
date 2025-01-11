@@ -41,8 +41,18 @@ func (c *PlanFactController) GetPlanFact(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
+	// Извлекаем фильтры
+	filters := repository.PlanFactFilters{
+		StartDate: ctx.Query("startDate"),
+		EndDate: ctx.Query("endDate"),
+		Crop: ctx.Query("crop"),
+		WorkType: ctx.Query("workType"),
+		WorkSubtype: ctx.Query("workSubType"),
+		Region: ctx.Query("region"),
+	}
+
 	// Получаем данные отчета
-	results, err := c.Repo.GetPlanFactTable(schema)
+	results, err := c.Repo.GetPlanFactTable(schema, filters)
 	if err != nil {
 		log.Printf("Ошибка при получении данных отчета: %v", err)
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
@@ -64,9 +74,9 @@ func (c *PlanFactController) GetPlanFact(ctx *fiber.Ctx) error {
 
 	// Подготовка ответа
 	headerCards := []fiber.Map{
-		{"title": "План", "value": plannedArea, "color": "#00FF00"},
-		{"title": "Факт", "value": factArea, "color": "#800080"},
-		{"title": "Прогресс", "value": overallProgress, "color": "#808080"},
+		{"title": "План", "value": fmt.Sprintf("%.2f", plannedArea), "color": "#00FF00"},
+		{"title": "Факт", "value": fmt.Sprintf("%2.f", factArea), "color": "#800080"},
+		{"title": "Прогресс", "value": fmt.Sprintf("%2.f", overallProgress), "color": "#808080"},
 	}
 
 	return ctx.JSON(fiber.Map{

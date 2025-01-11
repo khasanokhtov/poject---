@@ -14,5 +14,5 @@ func SetupPlanFactRoutes(app *fiber.App, db *gorm.DB) {
 	repo := repository.NewPlanFactRepository(db)
 	ctrl := controller.NewPlanFactController(repo)
 
-	app.Get("/plan-fact", middlewares.AuthMiddleware, ctrl.GetPlanFact)
+	app.Get("/get-plan-fact", middlewares.AuthMiddleware, ctrl.GetPlanFact)
 }
